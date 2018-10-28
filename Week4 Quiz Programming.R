@@ -31,3 +31,39 @@ boostedTestAccuracy <- as.integer(summary(predRightBoosted)[3])/length(predRight
 forestTestAccuracy
 boostedTestAccuracy
 agreementAccuracy
+
+#Q2
+library(caret)
+library(gbm)
+library(AppliedPredictiveModeling)
+
+set.seed(3433)
+
+data(AlzheimerDisease)
+
+adData = data.frame(diagnosis,predictors)
+inTrain = createDataPartition(adData$diagnosis, p = 3/4)[[1]]
+
+training = adData[ inTrain,]
+testing = adData[-inTrain,]
+
+set.seed(62433)
+
+modRF <- train(diagnosis ~., method = "rf", data = training)
+modGBM <- train(diagnosis ~., method = "gbm", data = training)
+modLDA <- train(diagnosis ~., method = "lda", data = training)
+
+predRF <- predict(modRF, testing)
+predGBM <- predict(modGBM, testing)
+predLDA <- predict(modLDA, testing)
+
+predDF <- data.frame(predRF, predGBM, predLDA, diagnosis = testing$diagnosis)
+
+modStacked <- train(diagnosis ~ ., method = "rf", data = predDF)
+predStacked <- predict(modStacked, predDF)
+
+data.frame(RF_Accuracy = confusionMatrix(predRF, testing$diagnosis)$overall[1],
+           GBM_Accuracy = confusionMatrix(predGBM, testing$diagnosis)$overall[1],
+           LDA_Accuracy = confusionMatrix(predLDA, testing$diagnosis)$overall[1],
+           Stacked_Accuracy = confusionMatrix(predStacked, testing$diagnosis)$overall[1]
+)
