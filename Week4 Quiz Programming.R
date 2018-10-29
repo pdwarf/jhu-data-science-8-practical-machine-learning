@@ -114,3 +114,26 @@ lines(ts1test, col="red")
 table(ts1test <= fcast$lower[,2] | ts1test >= fcast$upper[,2])
 
 table(ts1test <= fcast$lower[,2] | ts1test >= fcast$upper[,2])[1] / length(ts1test)
+
+
+
+#Q5
+set.seed(3523)
+
+library(AppliedPredictiveModeling)
+library(e1071)
+
+set.seed(325)
+
+data(concrete)
+
+inTrain = createDataPartition(concrete$CompressiveStrength, p = 3/4)[[1]]
+
+training = concrete[ inTrain,]
+testing = concrete[-inTrain,]
+
+modelFit <- svm(CompressiveStrength ~ ., data = training)
+
+predSVM <- predict(modelFit, testing)
+
+RMSE(predSVM, testing$CompressiveStrength)
