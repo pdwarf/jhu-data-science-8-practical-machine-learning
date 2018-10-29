@@ -67,3 +67,50 @@ data.frame(RF_Accuracy = confusionMatrix(predRF, testing$diagnosis)$overall[1],
            LDA_Accuracy = confusionMatrix(predLDA, testing$diagnosis)$overall[1],
            Stacked_Accuracy = confusionMatrix(predStacked, testing$diagnosis)$overall[1]
 )
+
+
+#Q3
+set.seed(3523)
+
+library(AppliedPredictiveModeling)
+library(elasticnet)
+
+data(concrete)
+
+inTrain = createDataPartition(concrete$CompressiveStrength, p = 3/4)[[1]]
+
+training = concrete[ inTrain,]
+testing = concrete[-inTrain,]
+
+set.seed(233)
+
+modelFit <- train(CompressiveStrength ~ ., method = "lasso", data = training)
+
+object <- predict(modelFit$finalModel, type = 'coefficients')
+
+object$coefficients #Cement is set to zero last
+
+plot.enet(modelFit$finalModel, xvar = "penalty", use.color = TRUE) #Cement is set to zero last
+
+
+
+#Q4
+library(lubridate) # For year() function below
+library(forecast)
+
+dat = read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/gaData.csv")
+
+ts1 = ts(dat$visitsTumblr)
+
+ts1train <- window(ts1, start = 1, end = 365)
+ts1test <- window(ts1, start = 366, end = 600)
+
+modelFit <- bats(ts1train)
+fcast <- forecast(modelFit, h = 235, frequency = 1)
+
+plot(fcast)
+lines(ts1test, col="red")
+
+table(ts1test <= fcast$lower[,2] | ts1test >= fcast$upper[,2])
+
+table(ts1test <= fcast$lower[,2] | ts1test >= fcast$upper[,2])[1] / length(ts1test)
