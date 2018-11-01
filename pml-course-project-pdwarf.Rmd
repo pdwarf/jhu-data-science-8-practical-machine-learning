@@ -1,0 +1,61 @@
+---
+title: "Predicting Correct Performance of Weight Lifting Exercises"
+output: html_notebook
+---
+
+This This project uses data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+The goal of this project is to predict the manner in which they did the exercise.
+
+##Getting the data ans splitting into training and test datasetas
+```{r}
+library(caret)
+library(randomForest)
+
+training <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", header = TRUE, na.strings = c("NA", "#DIV/0!", ""))
+testing <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE, na.strings = c("NA", "#DIV/0!", ""))
+```
+
+##Cleaning the data
+First, we remove all colums that have NA values in both training and test set.
+```{r}
+colIDsWithNAs <- which(colSums(is.na(training)) > 0)
+
+training <- training[,-colIDsWithNAs]
+testing <- testing[,-colIDsWithNAs]
+
+str(training)
+```
+This way, we are left with just 60 variables, including a number of descriptive variables like names and timestamps that we will exclude in our model building now.
+```{r}
+training <- training[, -(1:7)]
+testing <- testing[, -(1:7)]
+```
+Now, we have 52 predictors left to build our model, as well as the `classe` variable that we are trying to predict.
+
+##Building the model(s)
+For model building, we will try three approaches and compare them based on in-sample accuracy:
+* Decision tree
+* Random forest
+* Gradient Boosted Model
+
+For these models, it is not necessary to go through scaling and centering numeric values during preprocessing, so we will skip this. 
+All models will be built doing cross-validation.
+```{r}
+trainControl <- trainControl(method = "cv", number = 5)
+
+DTmodel <- train(classe ~ ., data = training, method = "rpart", trControl = trainControl)
+RFmodel <- randomForest(classe ~ ., data = training)
+GBmodel <- train(classe ~ ., data = training, method = "gbm", trControl = trainControl)
+
+DTmodel
+RFmodel
+GBmodel
+```
+As we can see, the random forest model has the highest accuracy on the training set. We will now use it to predict the test set data and then check the accuracy of these predictions.
+
+##Applying the random forest model to the test set
+```{r}
+predRF <- predict(RFmodel, testing)
+predRF
+```
