@@ -1,6 +1,8 @@
 ---
 title: "Predicting Correct Performance of Weight Lifting Exercises"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 This This project uses data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
@@ -24,7 +26,7 @@ colIDsWithNAs <- which(colSums(is.na(training)) > 0)
 training <- training[,-colIDsWithNAs]
 testing <- testing[,-colIDsWithNAs]
 
-str(training)
+str(training, list.len =10)
 ```
 This way, we are left with just 60 variables, including a number of descriptive variables like names and timestamps that we will exclude in our model building now.
 ```{r}
@@ -40,13 +42,13 @@ For model building, we will try three approaches and compare them based on in-sa
 * Gradient Boosted Model
 
 For these models, it is not necessary to go through scaling and centering numeric values during preprocessing, so we will skip this. 
-All models will be built doing cross-validation.
+All models will be built doing 5-fold-cross-validation, except for the random forest, as cross-validation is already implicitly part of random forests and doing a 5-fold-cv on top would be too computationally intensive here.
 ```{r}
 trainControl <- trainControl(method = "cv", number = 5)
 
 DTmodel <- train(classe ~ ., data = training, method = "rpart", trControl = trainControl)
 RFmodel <- randomForest(classe ~ ., data = training)
-GBmodel <- train(classe ~ ., data = training, method = "gbm", trControl = trainControl)
+GBmodel <- train(classe ~ ., data = training, method = "gbm", trControl = trainControl, verbose = FALSE)
 
 DTmodel
 RFmodel
